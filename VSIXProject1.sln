@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSIXProject1", "VSIXProject1\VSIXProject1.csproj", "{4719163D-D619-4023-9797-212584863234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CppOptimizationTool", "CppOptimizationTool\CppOptimizationTool.csproj", "{6C937825-4DB3-442F-887F-F103ED99256B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4719163D-D619-4023-9797-212584863234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4719163D-D619-4023-9797-212584863234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4719163D-D619-4023-9797-212584863234}.Debug|x86.ActiveCfg = Debug|x86
+		{4719163D-D619-4023-9797-212584863234}.Debug|x86.Build.0 = Debug|x86
+		{4719163D-D619-4023-9797-212584863234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4719163D-D619-4023-9797-212584863234}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4719163D-D619-4023-9797-212584863234}.Release|x86.ActiveCfg = Release|x86
+		{4719163D-D619-4023-9797-212584863234}.Release|x86.Build.0 = Release|x86
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Debug|x86.Build.0 = Debug|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Release|x86.ActiveCfg = Release|Any CPU
+		{6C937825-4DB3-442F-887F-F103ED99256B}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F8852ED2-427A-4A53-BFCB-D47E52F29DDE}
+	EndGlobalSection
+EndGlobal
