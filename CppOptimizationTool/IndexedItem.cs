@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CppOptimizationTool
 {
-    internal class IndexedItem<T>
+    public class IndexedItem<T>
     {
         public int Idx { get; set; }
         public T Value { get; set; }

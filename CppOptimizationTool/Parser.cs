@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CppOptimizationTool
 {
-    internal class Parser
+    public class Parser
     {
         private Random _random;
         private Dictionary<string, string> _cacheNames;

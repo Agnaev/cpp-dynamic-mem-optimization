@@ -189,7 +189,7 @@ namespace CppOptimizationTool
         }
     }
 
-    class Item
+    public class Item
     {
         public int Wi_min { get; set; }
         public int Wi_max { get; set; }

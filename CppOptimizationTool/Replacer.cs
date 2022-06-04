@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace CppOptimizationTool
 {
-    internal static class Replacer
+    public static class Replacer
     {
         public static async Task<(double, List<int>)> MakeReplaces(
             List<Item> values,
