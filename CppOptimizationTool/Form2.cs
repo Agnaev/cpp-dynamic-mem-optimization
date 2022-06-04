@@ -38,12 +38,20 @@ namespace CppOptimizationTool
             get => this.do_optimize.Enabled;
             set => this.do_optimize.Enabled = value;
         }
+        private string _targetFuncOut
+        {
+            get => this.targetFuncOut.Text;
+            set => this.targetFuncOut.Text = $"Прогнозируемое суммарное время выделения динамической памяти будет равно {value}";
+        }
+
+        private string _pathToFile { get; set; }
 
         public Form2(
             ref Dictionary<string, (int, List<string>)> tableData
         )
         {
             InitializeComponent();
+            this.targetFuncOut.Text = string.Empty;
             this._tableData = tableData;
             this.ram.Text = new ComputerInfo().TotalPhysicalMemory.ToString();
 
@@ -58,7 +66,6 @@ namespace CppOptimizationTool
 
         private void Form2_Load(object sender, EventArgs e)
         {
-            //MessageBox.Show("funcs: " + String.Join(" ", _funcCallsDict.Select(item => item.Key + " " + item.Value)));
             foreach (KeyValuePair<string, (int, List<string>)> item in _tableData)
             {
                 foreach (string arrname in item.Value.Item2)
@@ -77,7 +84,7 @@ namespace CppOptimizationTool
         private async void button1_Click(object sender, EventArgs e)
         {
             double Q = 0;
-            List<(int, double)> K = new List<(int, double)>();
+            List<IndexedItem<double>> K = new List<IndexedItem<double>>();
             var values = new List<Item>();
             //foreach (DataGridViewRow item in this.dataGridView1.Rows)
             int i = 0;
@@ -88,7 +95,12 @@ namespace CppOptimizationTool
                 int.TryParse(item.Cells["w_i_max"].Value.ToString(), out int wi_max);
                 int.TryParse(item.Cells["n_i"].Value.ToString(), out int ni);
                 double ki = (double)ni / (2 * S * (wi_max - wi_min));
-                K.Add((i, ki));
+                K.Add(
+                    new IndexedItem<double> {
+                        Idx = i,
+                        Value = ki
+                    }
+                );
                 values.Add(new Item
                 {
                     Wi_min = wi_min,
@@ -99,10 +111,10 @@ namespace CppOptimizationTool
             }
             List<int> Z = K
                 .OrderByDescending(
-                    el => el.Item2
+                    el => el.Value
                 )
                 .Select(
-                    el => el.Item1
+                    el => el.Idx
                 )
                 .ToList();
 
@@ -139,7 +151,10 @@ namespace CppOptimizationTool
                 R.Add(Math.Sign(ui - currentItem.Wi_min) * ui);
             }
 
-            //MessageBox.Show(String.Join(" ", R) + " " + v_curr);
+            double targetFuncValue = K.Select(
+                el => el.Value * Math.Pow(R[el.Idx], 2)
+            ).Sum();
+            _targetFuncOut = Math.Round(targetFuncValue, 3).ToString();
 
             var replaceData = new Dictionary<string, List<(string, int)>>();
             i = 0;
@@ -159,18 +174,16 @@ namespace CppOptimizationTool
                 }
             }
 
-            //var allocations = new Dictionary<string, List<(string, int)>>();
+            if (dataGridView1.Columns["Ri"] == null)
+            {
+                this.dataGridView1.Columns.Add("Ri", "Ri");
+            }
+            this.dataGridView1.Columns["Ri"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-            //string fnName;
-            //List<(string, int)> arrays = new List<(string, int)>();
-            //for (int i = 0; i < this.dataGridView1.Rows.Count; i++)
-            //{
-            //    DataGridViewRow row = this.dataGridView1.Rows[i];
-
-            //    fnName = row.Cells["func_name"].Value as string;
-            //    allocations.Add(fnName, arrays);
-            //    arrays.Clear();
-            //}
+            for (i = 0; i < R.Count; i++)
+            {
+                dataGridView1.Rows[i].Cells["Ri"].Value = R[i];
+            }
 
             FolderBrowserDialog folderDlg = new FolderBrowserDialog();
             if (folderDlg.ShowDialog(this) != DialogResult.OK)
@@ -187,9 +200,9 @@ namespace CppOptimizationTool
             string filename = Path.GetFileName(
                Connector.pathToSelectedFile
             );
-            string pathToFile = $"{folderDlg.SelectedPath}\\optimized-{filename}";
+            _pathToFile = $"{folderDlg.SelectedPath}\\optimized-{filename}";
             FileWriter writer = new FileWriter(
-                pathToFile,
+                _pathToFile,
                 FileMode.Create
             );
 
