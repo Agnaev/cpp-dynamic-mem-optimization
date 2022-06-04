@@ -29,6 +29,22 @@ namespace CppOptimizationTool
             }
         }
 
+        public bool ClearFile()
+        {
+            try
+            {
+                lock (_file)
+                {
+                    _file.SetLength(0);
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public void Close()
         {
             this._file.Close();

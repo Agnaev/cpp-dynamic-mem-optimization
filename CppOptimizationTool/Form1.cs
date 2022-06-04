@@ -137,7 +137,7 @@ namespace CppOptimizationTool
 
             string[] lines = Connector.selectedFileContent;
 
-            Dictionary<string, (int, List<string>)> tabledata = _parser.GetArrays(lines);
+            Dictionary<string, ParserFuncDescriptor> tabledata = _parser.GetArrays(lines);
 
             new Form2(
                 ref tabledata

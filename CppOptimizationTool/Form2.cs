@@ -8,13 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 using Microsoft.VisualBasic.Devices;
 
 namespace CppOptimizationTool
 {
     public partial class Form2 : Form
     {
-        private Dictionary<string, (int, List<string>)> _tableData;
+        private Dictionary<string, ParserFuncDescriptor> _tableData;
         public int S { get; set; } = 1;
         public long TotalRam
         {
@@ -41,17 +42,20 @@ namespace CppOptimizationTool
         private string _targetFuncOut
         {
             get => this.targetFuncOut.Text;
-            set => this.targetFuncOut.Text = $"Прогнозируемое суммарное время выделения динамической памяти будет равно {value}";
+            set {
+                this.targetFuncOut.Visible = true;
+                this.targetFuncOut.Text = $"Прогнозируемое суммарное время выделения динамической памяти будет равно {value}";
+            }
         }
+
 
         private string _pathToFile { get; set; }
 
         public Form2(
-            ref Dictionary<string, (int, List<string>)> tableData
+            ref Dictionary<string, ParserFuncDescriptor> tableData
         )
         {
             InitializeComponent();
-            this.targetFuncOut.Text = string.Empty;
             this._tableData = tableData;
             this.ram.Text = new ComputerInfo().TotalPhysicalMemory.ToString();
 
@@ -66,16 +70,16 @@ namespace CppOptimizationTool
 
         private void Form2_Load(object sender, EventArgs e)
         {
-            foreach (KeyValuePair<string, (int, List<string>)> item in _tableData)
+            foreach (KeyValuePair<string, ParserFuncDescriptor> item in _tableData)
             {
-                foreach (string arrname in item.Value.Item2)
+                foreach (string arrname in item.Value.ArraysList)
                 {
                     this.dataGridView1.Rows.Add(
                         item.Key,
                         arrname,
                         null,
                         null,
-                        item.Value.Item1
+                        item.Value.CallsCount
                     );
                 }
             }
@@ -158,13 +162,13 @@ namespace CppOptimizationTool
 
             var replaceData = new Dictionary<string, List<(string, int)>>();
             i = 0;
-            foreach (KeyValuePair<string, (int, List<string>)> item in _tableData)
+            foreach (KeyValuePair<string, ParserFuncDescriptor> item in _tableData)
             {
                 if (!replaceData.ContainsKey(item.Key))
                 {
                     replaceData.Add(item.Key, new List<(string, int)>());
                 }
-                foreach (string arrName in item.Value.Item2)
+                foreach (string arrName in item.Value.ArraysList)
                 {
                     int ri = R[i++];
                     if (ri != 0)
@@ -203,7 +207,7 @@ namespace CppOptimizationTool
             _pathToFile = $"{folderDlg.SelectedPath}\\optimized-{filename}";
             FileWriter writer = new FileWriter(
                 _pathToFile,
-                FileMode.Create
+                FileMode.OpenOrCreate
             );
 
             foreach (string line in Connector._parser.Parse(
@@ -211,10 +215,21 @@ namespace CppOptimizationTool
                 replaceData
             ))
             {
-                await writer.appendAsync(line);
+                if (false == await writer.appendAsync(line))
+                {
+                    writer.ClearFile();
+                    MessageBox.Show(
+                        "Произошла ошибка при записи в файл.",
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    return;
+                }
             }
 
             writer.Close();
+            this.showOptimizedCode.Visible = true;
         }
 
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -246,6 +261,19 @@ namespace CppOptimizationTool
             public int Wi_min { get; set; }
             public int Wi_max { get; set; }
             public int Ni { get; set; }
+        }
+
+        private void openOptimizedFileButtonHandler(object sender, EventArgs e)
+        {
+            new Process
+            {
+                StartInfo =
+                {
+                    FileName = "CMD.exe",
+                    Arguments = $"/c notepad {_pathToFile}",
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            }.Start();
         }
     }
 }

@@ -43,11 +43,12 @@
             // 
             // addFilesBtn
             // 
+            this.addFilesBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.addFilesBtn.Location = new System.Drawing.Point(18, 15);
             this.addFilesBtn.Name = "addFilesBtn";
             this.addFilesBtn.Size = new System.Drawing.Size(127, 31);
             this.addFilesBtn.TabIndex = 0;
-            this.addFilesBtn.Text = "Добавить файлы";
+            this.addFilesBtn.Text = "Append files";
             this.addFilesBtn.UseVisualStyleBackColor = true;
             this.addFilesBtn.Click += new System.EventHandler(this.addFilesBtn_Click);
             // 
@@ -84,36 +85,40 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(15, 49);
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label1.Location = new System.Drawing.Point(12, 49);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 13);
+            this.label1.Size = new System.Drawing.Size(132, 20);
             this.label1.TabIndex = 3;
             this.label1.Text = "Список файлов:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(287, 49);
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label2.Location = new System.Drawing.Point(290, 50);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(107, 13);
+            this.label2.Size = new System.Drawing.Size(163, 20);
             this.label2.TabIndex = 4;
             this.label2.Text = "Содержимое файла";
             // 
             // startAnalysisBtn
             // 
-            this.startAnalysisBtn.Location = new System.Drawing.Point(276, 15);
+            this.startAnalysisBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.startAnalysisBtn.Location = new System.Drawing.Point(330, 16);
             this.startAnalysisBtn.Name = "startAnalysisBtn";
-            this.startAnalysisBtn.Size = new System.Drawing.Size(181, 31);
+            this.startAnalysisBtn.Size = new System.Drawing.Size(194, 31);
             this.startAnalysisBtn.TabIndex = 5;
-            this.startAnalysisBtn.Text = "Запуск мастера оптимизации";
+            this.startAnalysisBtn.Text = "Run optimization tool";
             this.startAnalysisBtn.UseVisualStyleBackColor = true;
             this.startAnalysisBtn.Click += new System.EventHandler(this.startAnalysisBtn_Click);
             // 
             // removeFromListBtn
             // 
+            this.removeFromListBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.removeFromListBtn.Location = new System.Drawing.Point(151, 15);
             this.removeFromListBtn.Name = "removeFromListBtn";
-            this.removeFromListBtn.Size = new System.Drawing.Size(119, 31);
+            this.removeFromListBtn.Size = new System.Drawing.Size(173, 31);
             this.removeFromListBtn.TabIndex = 6;
             this.removeFromListBtn.Text = "Удалить из списка";
             this.removeFromListBtn.UseVisualStyleBackColor = true;

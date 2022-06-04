@@ -35,11 +35,11 @@ namespace CppOptimizationTool
             ).ToArray());
         }
 
-        public Dictionary<string, (int, List<string>)>
+        public Dictionary<string, ParserFuncDescriptor>
         GetArrays(string[] lines)
         {
             int prevNesting = 0;
-            var result = new Dictionary<string, (int, List<string>)>();
+            var result = new Dictionary<string, ParserFuncDescriptor>();
 
             foreach (var (i, line, nesting, fn) in makeParse(lines))
             {
@@ -52,11 +52,17 @@ namespace CppOptimizationTool
                     string name = getNameFromLine(_removePointSigns(line));
                     if (!result.ContainsKey(fn))
                     {
-                        result.Add(fn, (0, new List<string>()));
+                        result.Add(
+                            fn,
+                            new ParserFuncDescriptor
+                            {
+                                ArraysList = new List<string>(),
+                                CallsCount = 0
+                            }
+                        );
                     }
-                    result[fn].Item2.Add(name);
+                    result[fn].ArraysList.Add(name);
 
-                    string replacedLine = parseOptimize(line, 0, nesting);
                     if (_allocationPlaceHashs.ContainsKey(nesting))
                     {
                         _allocationPlaceHashs[nesting] = _codeBlocks[nesting];
@@ -66,22 +72,14 @@ namespace CppOptimizationTool
                         _allocationPlaceHashs.Add(nesting, _codeBlocks[nesting]);
                     }
                     name = $"{_codeBlocks[nesting]}_{name}";
-                    _allocationLines.Add(name, (i, line, replacedLine));
                 }
 
-                if (line.Contains("delete"))
+                if (line.Contains("delete") && _codeBlocks[nesting] != _allocationPlaceHashs[nesting] && result.ContainsKey(fn))
                 {
-                    if (_codeBlocks[nesting] != _allocationPlaceHashs[nesting])
-                    {
-                        string name = getNameFromLine(_removePointSigns(line));
-                        if (result.ContainsKey(fn))
-                        {
-                            result[fn] = (
-                                result[fn].Item1,
-                                result[fn].Item2.Where(el => el != name).ToList()
-                            );
-                        }
-                    }
+                    string name = getNameFromLine(_removePointSigns(line));
+                    result[fn].ArraysList = result[fn].ArraysList.Where(
+                        el => el != name
+                    ).ToList();
                 }
 
                 prevNesting = nesting;
@@ -93,10 +91,7 @@ namespace CppOptimizationTool
                 {
                     continue;
                 }
-                result[item.Key] = (
-                    item.Value,
-                    result[item.Key].Item2
-                );
+                result[item.Key].CallsCount = item.Value;
             }
 
             this.clear();
@@ -264,7 +259,6 @@ namespace CppOptimizationTool
                 return line;
             }
             string replacedMemName = _cacheNames[key];
-            //int currentCacheNesting = parseNestingFromCacheName(replacedMemName);
             string condition = $"if ({dynamicMemName} != {replacedMemName})";
 
             return $"{condition} delete[] {dynamicMemName};";
@@ -408,5 +402,11 @@ namespace CppOptimizationTool
         }
 
         internal string _removePointSigns(string line) => line.Replace("*", "").Replace("&", "");
+    }
+
+    public class ParserFuncDescriptor
+    {
+        public int CallsCount { get; set; }
+        public List<string> ArraysList { get; set; }
     }
 }
