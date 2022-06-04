@@ -87,12 +87,10 @@ namespace CppOptimizationTool
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            double Q = 0;
             List<IndexedItem<double>> K = new List<IndexedItem<double>>();
-            var values = new List<Item>();
-            //foreach (DataGridViewRow item in this.dataGridView1.Rows)
-            int i = 0;
-            for (i = 0; i < this.dataGridView1.Rows.Count; i++)
+            List<Item> values = new List<Item>();
+
+            for (int i = 0; i < this.dataGridView1.Rows.Count; i++)
             {
                 DataGridViewRow item = this.dataGridView1.Rows[i];
                 int.TryParse(item.Cells["w_i_min"].Value.ToString(), out int wi_min);
@@ -100,7 +98,8 @@ namespace CppOptimizationTool
                 int.TryParse(item.Cells["n_i"].Value.ToString(), out int ni);
                 double ki = (double)ni / (2 * S * (wi_max - wi_min));
                 K.Add(
-                    new IndexedItem<double> {
+                    new IndexedItem<double>
+                    {
                         Idx = i,
                         Value = ki
                     }
@@ -111,71 +110,6 @@ namespace CppOptimizationTool
                     Wi_max = wi_max,
                     Ni = ni,
                 });
-                Q += ni * Math.Pow(wi_max, 2) / (S * (wi_max - wi_min));
-            }
-            List<int> Z = K
-                .OrderByDescending(
-                    el => el.Value
-                )
-                .Select(
-                    el => el.Idx
-                )
-                .ToList();
-
-            long v_curr = TotalRam;
-            Item currentItem;
-            List<int> U = new int[Z.Count].ToList();
-
-            i = 0;
-            for (int j = 0; j < Z.Count; j++)
-            {
-                i = Z[j];
-                currentItem = values[i];
-                if (v_curr < currentItem.Wi_min)
-                {
-                    U[i] = currentItem.Wi_min;
-                    v_curr = Math.Max(v_curr - U[i], 0);
-                }
-                if (v_curr < currentItem.Wi_max)
-                {
-                    U[i] = (int)v_curr;
-                }
-                else
-                {
-                    U[i] = currentItem.Wi_max;
-                }
-                v_curr -= U[i];
-            }
-
-            List<int> R = new List<int>();
-            for (i = 0; i < U.Count; i++)
-            {
-                currentItem = values[i];
-                int ui = U[i];
-                R.Add(Math.Sign(ui - currentItem.Wi_min) * ui);
-            }
-
-            double targetFuncValue = K.Select(
-                el => el.Value * Math.Pow(R[el.Idx], 2)
-            ).Sum();
-            _targetFuncOut = Math.Round(targetFuncValue, 3).ToString();
-
-            var replaceData = new Dictionary<string, List<(string, int)>>();
-            i = 0;
-            foreach (KeyValuePair<string, ParserFuncDescriptor> item in _tableData)
-            {
-                if (!replaceData.ContainsKey(item.Key))
-                {
-                    replaceData.Add(item.Key, new List<(string, int)>());
-                }
-                foreach (string arrName in item.Value.ArraysList)
-                {
-                    int ri = R[i++];
-                    if (ri != 0)
-                    {
-                        replaceData[item.Key].Add((arrName, ri));
-                    }
-                }
             }
 
             if (dataGridView1.Columns["Ri"] == null)
@@ -183,11 +117,6 @@ namespace CppOptimizationTool
                 this.dataGridView1.Columns.Add("Ri", "Ri");
             }
             this.dataGridView1.Columns["Ri"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-            for (i = 0; i < R.Count; i++)
-            {
-                dataGridView1.Rows[i].Cells["Ri"].Value = R[i];
-            }
 
             FolderBrowserDialog folderDlg = new FolderBrowserDialog();
             if (folderDlg.ShowDialog(this) != DialogResult.OK)
@@ -205,30 +134,20 @@ namespace CppOptimizationTool
                Connector.pathToSelectedFile
             );
             _pathToFile = $"{folderDlg.SelectedPath}\\optimized-{filename}";
-            FileWriter writer = new FileWriter(
+
+            (double, List<int>) data = await Replacer.MakeReplaces(
+                values,
+                K,
                 _pathToFile,
-                FileMode.OpenOrCreate
+                TotalRam,
+                _tableData
             );
-
-            foreach (string line in Connector._parser.Parse(
-                Connector.selectedFileContent,
-                replaceData
-            ))
+            
+            for (int i = 0; i < data.Item2.Count; i++)
             {
-                if (false == await writer.appendAsync(line))
-                {
-                    writer.ClearFile();
-                    MessageBox.Show(
-                        "Произошла ошибка при записи в файл.",
-                        "Ошибка",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
-                    return;
-                }
+                dataGridView1.Rows[i].Cells["Ri"].Value = data.Item2[i];
             }
-
-            writer.Close();
+            _targetFuncOut = Math.Round(data.Item1, 3).ToString();
             this.showOptimizedCode.Visible = true;
         }
 
@@ -256,13 +175,6 @@ namespace CppOptimizationTool
             }
         }
 
-        private struct Item
-        {
-            public int Wi_min { get; set; }
-            public int Wi_max { get; set; }
-            public int Ni { get; set; }
-        }
-
         private void openOptimizedFileButtonHandler(object sender, EventArgs e)
         {
             new Process
@@ -275,5 +187,12 @@ namespace CppOptimizationTool
                 }
             }.Start();
         }
+    }
+
+    class Item
+    {
+        public int Wi_min { get; set; }
+        public int Wi_max { get; set; }
+        public int Ni { get; set; }
     }
 }
