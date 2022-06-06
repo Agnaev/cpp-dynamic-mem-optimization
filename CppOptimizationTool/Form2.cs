@@ -140,7 +140,9 @@ namespace CppOptimizationTool
                 K,
                 _pathToFile,
                 TotalRam,
-                _tableData
+                _tableData,
+                Connector._parser,
+                Connector.selectedFileContent
             );
             
             for (int i = 0; i < data.Item2.Count; i++)

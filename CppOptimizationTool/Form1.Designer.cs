@@ -86,21 +86,21 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(12, 49);
+            this.label1.Location = new System.Drawing.Point(14, 49);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(132, 20);
+            this.label1.Size = new System.Drawing.Size(60, 20);
             this.label1.TabIndex = 3;
-            this.label1.Text = "Список файлов:";
+            this.label1.Text = "files list";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label2.Location = new System.Drawing.Point(290, 50);
+            this.label2.Location = new System.Drawing.Point(286, 50);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(163, 20);
+            this.label2.Size = new System.Drawing.Size(154, 20);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Содержимое файла";
+            this.label2.Text = "Selected file content";
             // 
             // startAnalysisBtn
             // 
@@ -109,7 +109,7 @@
             this.startAnalysisBtn.Name = "startAnalysisBtn";
             this.startAnalysisBtn.Size = new System.Drawing.Size(194, 31);
             this.startAnalysisBtn.TabIndex = 5;
-            this.startAnalysisBtn.Text = "Run optimization tool";
+            this.startAnalysisBtn.Text = "Run optimization";
             this.startAnalysisBtn.UseVisualStyleBackColor = true;
             this.startAnalysisBtn.Click += new System.EventHandler(this.startAnalysisBtn_Click);
             // 
@@ -120,7 +120,7 @@
             this.removeFromListBtn.Name = "removeFromListBtn";
             this.removeFromListBtn.Size = new System.Drawing.Size(173, 31);
             this.removeFromListBtn.TabIndex = 6;
-            this.removeFromListBtn.Text = "Удалить из списка";
+            this.removeFromListBtn.Text = "Delete from list";
             this.removeFromListBtn.UseVisualStyleBackColor = true;
             this.removeFromListBtn.Click += new System.EventHandler(this.removeFromListBtn_Click);
             // 

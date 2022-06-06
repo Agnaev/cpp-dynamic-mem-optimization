@@ -13,9 +13,11 @@ namespace CppOptimizationTool
         public static async Task<(double, List<int>)> MakeReplaces(
             List<Item> values,
             List<IndexedItem<double>> K,
-            string pathToFile,
+            string pathToOutFile,
             long v_curr,
             Dictionary<string, ParserFuncDescriptor> tableData,
+            Parser _parser,
+            string[] lines,
             int S = 1
         )
         {
@@ -87,12 +89,12 @@ namespace CppOptimizationTool
             }
 
             FileWriter writer = new FileWriter(
-                pathToFile,
+                pathToOutFile,
                 FileMode.OpenOrCreate
             );
 
-            foreach (string line in Connector._parser.Parse(
-                Connector.selectedFileContent,
+            foreach (string line in _parser.Parse(
+                lines,
                 replaceData
             ))
             {
