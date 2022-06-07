@@ -9,13 +9,13 @@ namespace CppOptimizationTool
 {
     public class Parser
     {
-        private Random _random;
-        private Dictionary<string, string> _cacheNames;
-        private Dictionary<string, string> _staticCaches;
-        private Dictionary<int, string> _codeBlocks;
-        private Dictionary<int, string> _allocationPlaceHashs;
-        private Dictionary<string, (int, string, string)> _allocationLines;
-        private Dictionary<string, int> _funcCallsCounter;
+        private Random _random { get; }
+        private Dictionary<string, string> _cacheNames { get; }
+        private Dictionary<string, string> _staticCaches { get; }
+        private Dictionary<int, string> _codeBlocks { get; }
+        private Dictionary<int, string> _allocationPlaceHashs { get; }
+        private Dictionary<string, (int, string, string)> _allocationLines { get; }
+        private Dictionary<string, int> _funcCallsCounter { get; }
 
         public Parser()
         {
@@ -30,9 +30,12 @@ namespace CppOptimizationTool
 
         private string staticCachesListToString()
         {
-            return string.Join(" ", _staticCaches.Select(
-                item => item.Value
-            ).ToArray());
+            return string.Join(
+                " ",
+                _staticCaches.Select(
+                    item => item.Value
+                ).ToArray()
+            );
         }
 
         public Dictionary<string, ParserFuncDescriptor>
@@ -115,6 +118,8 @@ namespace CppOptimizationTool
                 if (nesting == 1 && prevNesting == 0 && staticCachesInsertPosition == -1)
                 {
                     staticCachesInsertPosition = i;
+                    result.Add("");
+                    continue;
                 }
 
                 if (
@@ -187,10 +192,10 @@ namespace CppOptimizationTool
                 _codeBlocks.Add(0, getHash());
 
             }
-
-            for (int i = 0; i < lines.Length; i++)
+            int resultLinesCount = lines.Length;
+            for (int i = 0, linesIterator = 0; i < resultLinesCount; i++, linesIterator++)
             {
-                string line = lines[i];
+                string line = lines[linesIterator];
                 if (line.Contains("//"))
                 {
                     line = cutOnelineCommentFromLine(line);
@@ -210,15 +215,25 @@ namespace CppOptimizationTool
                     continue;
                 }
 
-                if (line.Count(el => el == ';') > 1)
+                if (line.Contains(";;"))
                 {
-                    Regex reg = new Regex(";{1,}");
+                    Regex reg = new Regex(@";+\s*");
                     line = reg.Replace(line, ";");
+                }
+                if (line.Contains('\n'))
+                {
                     string[] splitedLines = line.Split(new char[] { '\n' });
                     foreach (var (nestedI, nestedLine, nestedNesting, fn) in makeParse(splitedLines))
                     {
-                        yield return (nestedI, nestedLine, nestedNesting, fn);
+                        if (string.IsNullOrEmpty(nestedLine))
+                        {
+                            continue;
+                        }
+                        yield return (i + nestedI, nestedLine, nestedNesting, fn);
                     }
+                    resultLinesCount += splitedLines.Length;
+                    i += splitedLines.Length;
+                    continue;
                 }
 
                 (bool, string) funcDecl = checkForFunctionDeclRegex(line);
@@ -285,6 +300,7 @@ namespace CppOptimizationTool
         {
             int start = line.IndexOf("new ");
             int length = line.IndexOf(";") - start;
+            length = length < 0 ? line.Length - start : length;
             string dynamicMemoryAllocation = line.Substring(
                 start,
                 length
