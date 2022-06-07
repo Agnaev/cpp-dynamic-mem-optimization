@@ -19,55 +19,13 @@ namespace StressTesting
         static void Main(string[] args)
         {
             Test();
-
-            //return;
-            //string file = "D:\\Диплом 2022\\TestDiplom\\examples\\example7.cpp";
-            //string[] lines = File.ReadAllLines(file);
-
-            //Parser parser = new Parser();
-            //Stopwatch timer = new Stopwatch();
-
-            //timer.Start();
-            //Dictionary<string, ParserFuncDescriptor> tableData = parser.GetArrays(lines);
-            //timer.Stop();
-            //Console.WriteLine("Analiz time: " + timer.ElapsedMilliseconds);
-            //int S = 1;
-
-
-            //List<IndexedItem<double>> K = new List<IndexedItem<double>>();
-            //List<Item> values = new List<Item>();
-
-            //translateInputData(
-            //    ref tableData,
-            //    out K,
-            //    out values
-            //);
-
-            //string outFile = "D:\\temp\\optimized.cpp";
-            //long v_curr = 100L;
-
-            //timer.Start();
-            //var outData = Replacer.MakeReplaces(
-            //    values,
-            //    K,
-            //    outFile,
-            //    v_curr,
-            //    tableData,
-            //    parser,
-            //    lines,
-            //    S
-            //);
-            //timer.Stop();
-
-            //Console.WriteLine("replaces time: " + timer.ElapsedMilliseconds);
-            //Console.ReadKey();
         }
 
         static void Test()
         {
             SourceCodeGenerator sourceCodeGenerator = new SourceCodeGenerator();
             Parser parser = new Parser();
-            Stopwatch timer;
+            Stopwatch timer = new Stopwatch();
 
             Dictionary<string, ParserFuncDescriptor> tableData;
             List<IndexedItem<double>> K;
@@ -75,50 +33,55 @@ namespace StressTesting
 
             string[] fileLines;
             string outFilePath;
-            long v_curr = rand.Next(0, 250);
+            long v_curr;
             const int S = 1;
-            for (int i = 10; i < EXPERIMENTS_COUNT; i++)
+            string analyzTime;
+            string replaceTime;
+            (double, List<int>) response = (.0, new List<int>());
+            //for (int i = 10; i < 11; i++)
+            //{
+            fileLines = sourceCodeGenerator.createCppCode(100);
+            WriteToFile(0, fileLines);
+
+            timer.Start();
+            tableData = parser.GetArrays(fileLines);
+            timer.Stop();
+
+            analyzTime = timer.Elapsed.ToString("mm\\:ss\\.ff");
+
+            TranslateInputData(
+                ref tableData,
+                out K,
+                out values,
+                out v_curr
+            );
+
+            outFilePath = Path.Combine(EXPERIMENT_PATH, $"0.optimized.cpp");
+
+            timer.Reset();
+            timer.Start();
+            try
             {
-                fileLines = sourceCodeGenerator.createCppCode(i);
-                WriteToFile(i, fileLines);
-
-                timer = new Stopwatch();
-                timer.Start();
-                tableData = parser.GetArrays(fileLines);
-                timer.Stop();
-
-                Console.WriteLine("Analiz time: " + timer.ElapsedMilliseconds);
-
-                translateInputData(
-                    ref tableData,
-                    out K,
-                    out values
+                response = Replacer.MakeReplaces(
+                    values,
+                    K,
+                    outFilePath,
+                    v_curr,
+                    tableData,
+                    parser,
+                    fileLines,
+                    S
                 );
-
-                outFilePath = Path.Combine(EXPERIMENT_PATH, $"{i}.cpp");
-
-                timer = new Stopwatch();
-                timer.Start();
-                try
-                {
-                    Replacer.MakeReplaces(
-                        values,
-                        K,
-                        outFilePath,
-                        v_curr,
-                        tableData,
-                        parser,
-                        fileLines,
-                        S
-                    );
-                } catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-
-                timer.Stop();
-                Console.WriteLine("replaces time: " + timer.ElapsedMilliseconds);
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
+
+            timer.Stop();
+            replaceTime = timer.Elapsed.ToString("mm\\:ss\\.ff");
+            //}
+            Console.WriteLine(String.Join('\n', response.Item2));
+            Console.WriteLine($"Analyz time: {analyzTime}\nReplace time: {replaceTime}");
         }
 
         static void WriteToFile(int experimentNum, in string[] fileLines)
@@ -127,13 +90,15 @@ namespace StressTesting
             File.WriteAllLines(filePath, fileLines);
         }
 
-        static void translateInputData(
+        static void TranslateInputData(
             ref Dictionary<string, ParserFuncDescriptor> tableData,
             out List<IndexedItem<double>> K,
             out List<Item> values,
+            out long v_current,
             int S = 1
         )
         {
+            v_current = 0;
             values = new List<Item>();
             K = new List<IndexedItem<double>>();
             int ni, wi_min, wi_max, i = 0;
@@ -142,10 +107,11 @@ namespace StressTesting
             {
                 foreach (string arrname in item.Value.ArraysList)
                 {
-                    wi_min = rand.Next(25, 100);
+                    wi_min = rand.Next(150, 200);
                     wi_max = wi_min + 25;
-                    ni = item.Value.CallsCount;
+                    ni = item.Value.CallsCount; // rand.Next(1, 10);
                     ki = (double)ni / (2 * S * (wi_max - wi_min));
+                    v_current += (wi_max + wi_min) / 2;
                     K.Add(
                         new IndexedItem<double>
                         {
@@ -187,7 +153,6 @@ namespace StressTesting
             "unsigned long int",
             "unsigned long long int",
             "unsigned char",
-            "long float"
         };
 
         private string GetHashString(int length)
@@ -199,6 +164,12 @@ namespace StressTesting
                 ).ToArray()
             );
         }
+
+        /// <summary>
+        /// Генератор C++ кода
+        /// </summary>
+        /// <param name="dynamicMemAllocationTimes">Количество выделений динамической памяти.</param>
+        /// <returns></returns>
         public string[] createCppCode(int dynamicMemAllocationTimes)
         {
             string[] code = new string[dynamicMemAllocationTimes + 2];
@@ -229,7 +200,8 @@ namespace StressTesting
 
             return $"void {funcName} () {{\n" +
                 $"  {dataType}* {allocName} = new {dataType}[{sourceCodeSize}];\n" +
-                $"  {allocName}[0] = {getDefaultValue(dataType)};\n" +
+                //$"  {allocName}[0] = {getDefaultValue(dataType)};\n" +
+                $"  for (int i = 0; i < {sourceCodeSize}; ++i) {allocName}[i] = {getDefaultValue(dataType)};\n" +
                 $"  delete[] {allocName};\n" +
                 $"}}\n\n";
         }
@@ -239,10 +211,11 @@ namespace StressTesting
             string headers = "#include <chrono>\n#include <iostream>\n";
 
             string timeMeasure = $"\nint main() {{" +
-                $"auto start = std::chrono::high_reosolution_clock::now();\n" +
+                $"auto start = std::chrono::high_resolution_clock::now();\n" +
                 string.Join("();\n", this._funcsList) +
-                $"auto end = std::chrono::high_reosolution_clock::now();\n" +
-                $"int durationTime = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();\n" +
+                $"();\n" +
+                $"auto end = std::chrono::high_resolution_clock::now();\n" +
+                $"int durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();\n" +
                 $"std::cout << durationTime << std::endl;\n" +
                 $"return 0;" +
                 $"}}";
@@ -253,11 +226,11 @@ namespace StressTesting
         {
             if (dataType == "string")
             {
-                return GetHashString(6);
+                return $"\"{GetHashString(6)}\"";
             }
             if (dataType == "char")
             {
-                return _chars[_rand.Next(_chars.Length)];
+                return $"'{_chars[_rand.Next(_chars.Length)]}'";
             }
             return 1;
         }
