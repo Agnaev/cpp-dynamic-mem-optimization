@@ -212,6 +212,8 @@ namespace CppOptimizationTool
 
                 if (line.Count(el => el == ';') > 1)
                 {
+                    Regex reg = new Regex(";{1,}");
+                    line = reg.Replace(line, ";");
                     string[] splitedLines = line.Split(new char[] { '\n' });
                     foreach (var (nestedI, nestedLine, nestedNesting, fn) in makeParse(splitedLines))
                     {

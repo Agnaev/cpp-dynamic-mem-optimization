@@ -47,16 +47,16 @@ namespace CppOptimizationTool
         private void Form1_Load(object sender, EventArgs e)
         {
             _setOptimizeButtonEnabled();
-            EnvDTE.DTE dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            //EnvDTE.DTE dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
 
-            string activeFilePath = dte.ActiveDocument.FullName;
-            if (Path.GetExtension(activeFilePath) != ".cpp")
-            {
-                return;
-            }
-            this.addFiles(new string[] { activeFilePath });
-            this.filesListbox.SelectedIndex = 0;
-            this._selectedFileName = activeFilePath;
+            //string activeFilePath = dte.ActiveDocument.FullName;
+            //if (Path.GetExtension(activeFilePath) != ".cpp")
+            //{
+            //    return;
+            //}
+            //this.addFiles(new string[] { activeFilePath });
+            //this.filesListbox.SelectedIndex = 0;
+            //this._selectedFileName = activeFilePath;
         }
 
         private void addFilesBtn_Click(object sender, EventArgs e)
