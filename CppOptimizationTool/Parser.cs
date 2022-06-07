@@ -104,7 +104,7 @@ namespace CppOptimizationTool
         )
         {
             int prevNesting = 0;
-            string[] result = new string[lines.Length];
+            List<string> result = new List<string>();
 
             int staticCachesInsertPosition = -1;
 
@@ -164,7 +164,7 @@ namespace CppOptimizationTool
                     }
                 }
 
-                result[i] = line;
+                result.Add(line);
                 prevNesting = nesting;
             }
 
@@ -174,13 +174,19 @@ namespace CppOptimizationTool
             }
             this.clear();
 
-            return result;
+            return result.ToArray();
         }
 
         internal IEnumerable<(int, string, int, string)> makeParse(string[] lines)
         {
             int nesting = 0;
             bool insideMultilineCommentsNesting = false;
+
+            if (!_codeBlocks.ContainsKey(0))
+            {
+                _codeBlocks.Add(0, getHash());
+
+            }
 
             for (int i = 0; i < lines.Length; i++)
             {
@@ -202,6 +208,15 @@ namespace CppOptimizationTool
                 if (insideMultilineCommentsNesting)
                 {
                     continue;
+                }
+
+                if (line.Count(el => el == ';') > 1)
+                {
+                    string[] splitedLines = line.Split(new char[] { '\n' });
+                    foreach (var (nestedI, nestedLine, nestedNesting, fn) in makeParse(splitedLines))
+                    {
+                        yield return (nestedI, nestedLine, nestedNesting, fn);
+                    }
                 }
 
                 (bool, string) funcDecl = checkForFunctionDeclRegex(line);
