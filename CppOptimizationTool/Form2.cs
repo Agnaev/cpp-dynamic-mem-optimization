@@ -135,7 +135,7 @@ namespace CppOptimizationTool
             );
             _pathToFile = $"{folderDlg.SelectedPath}\\optimized-{filename}";
 
-            (double, List<int>) data = await Replacer.MakeReplaces(
+            (double, List<int>) data = Replacer.MakeReplaces(
                 values,
                 K,
                 _pathToFile,

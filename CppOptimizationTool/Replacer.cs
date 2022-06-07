@@ -10,7 +10,7 @@ namespace CppOptimizationTool
 {
     public static class Replacer
     {
-        public static async Task<(double, List<int>)> MakeReplaces(
+        public static (double, List<int>) MakeReplaces(
             List<Item> values,
             List<IndexedItem<double>> K,
             string pathToOutFile,
@@ -88,30 +88,21 @@ namespace CppOptimizationTool
                 }
             }
 
-            FileWriter writer = new FileWriter(
-                pathToOutFile,
-                FileMode.OpenOrCreate
-            );
-
-            foreach (string line in _parser.Parse(
-                lines,
-                replaceData
-            ))
+            string[] res = _parser.Parse(lines, replaceData);
+            try
             {
-                if (false == await writer.appendAsync(line))
-                {
-                    writer.ClearFile();
-                    MessageBox.Show(
-                        "Произошла ошибка при записи в файл.",
-                        "Ошибка",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
-                    return (.0, null);
-                }
-            }
 
-            writer.Close();
+                File.WriteAllLines(pathToOutFile, res);
+            } catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Произошла ошибка при записи в файл.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return (.0, null);
+            }
 
             return (targetFuncValue, R);
         }
