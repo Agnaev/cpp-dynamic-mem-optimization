@@ -117,9 +117,8 @@ namespace CppOptimizationTool
 
                 if (nesting == 1 && prevNesting == 0 && staticCachesInsertPosition == -1)
                 {
-                    staticCachesInsertPosition = i;
+                    staticCachesInsertPosition = result.Count();
                     result.Add("");
-                    continue;
                 }
 
                 if (
@@ -175,7 +174,7 @@ namespace CppOptimizationTool
 
             if (staticCachesInsertPosition != -1)
             {
-                result[staticCachesInsertPosition] = $"{this.staticCachesListToString()} {lines[staticCachesInsertPosition]}";
+                result[staticCachesInsertPosition] = $"{this.staticCachesListToString()}";
             }
             this.clear();
 
@@ -222,14 +221,16 @@ namespace CppOptimizationTool
                 }
                 if (line.Contains('\n'))
                 {
+                    int skippedLines = 0;
                     string[] splitedLines = line.Split(new char[] { '\n' });
                     foreach (var (nestedI, nestedLine, nestedNesting, fn) in makeParse(splitedLines))
                     {
                         if (string.IsNullOrEmpty(nestedLine))
                         {
+                            skippedLines += 1;
                             continue;
                         }
-                        yield return (i + nestedI, nestedLine, nestedNesting, fn);
+                        yield return (i + nestedI - skippedLines, nestedLine, nestedNesting, fn);
                     }
                     resultLinesCount += splitedLines.Length;
                     i += splitedLines.Length;
