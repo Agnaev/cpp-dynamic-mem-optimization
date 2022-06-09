@@ -18,16 +18,38 @@ namespace StressTesting
         
         static void Main(string[] args)
         {
-            Test();
+            List<(long, long)> averageTimes = new List<(long, long)>();
+            List<(long, long)> times = new List<(long, long)>();
+
+            //Console.WriteLine(Test(50_000));
+
+            for (int i = 1_000; i <= 10_000; i += 1_000)
+            {
+                for (int j = 0; j < 100; j++)
+                {
+                    times.Add(Test(i));
+                }
+                averageTimes.Add(aggregate(times));
+                Console.WriteLine(averageTimes.Last());
+                times.Clear();
+            }
+            //var res = times.Aggregate((0L, 0L), (sum, t) => (sum.Item1 + t.Item1, sum.Item2 + t.Item2));
+            //Console.WriteLine(res);
+            //Test();
+
+            (long, long) aggregate(List<(long, long)> times) {
+                var res = times.Aggregate((0L, 0L), (sum, t) => (sum.Item1 + t.Item1, sum.Item2 + t.Item2));
+                return (res.Item1 / times.Count(), res.Item2 / times.Count());
+            }
         }
 
-        static void Test()
+        static (long, long) Test(int allocationsCount)
         {
             SourceCodeGenerator sourceCodeGenerator = new SourceCodeGenerator();
             Parser parser = new Parser();
             Stopwatch timer = new Stopwatch();
 
-            Dictionary<string, ParserFuncDescriptor> tableData;
+            Dictionary<string, ParserFuncDescriptor> tableData; 
             List<IndexedItem<double>> K;
             List<Item> values;
 
@@ -35,19 +57,19 @@ namespace StressTesting
             string outFilePath;
             long v_curr;
             const int S = 1;
-            string analyzTime;
-            string replaceTime;
+            long analyzTime;
+            long replaceTime;
             (double, List<int>) response = (.0, new List<int>());
             //for (int i = 10; i < 11; i++)
             //{
-            fileLines = sourceCodeGenerator.createCppCode(100);
-            WriteToFile(0, fileLines);
+            fileLines = sourceCodeGenerator.CreateCppCode(allocationsCount);
+            //WriteToFile(0, fileLines);
 
             timer.Start();
             tableData = parser.GetArrays(fileLines);
             timer.Stop();
 
-            analyzTime = timer.Elapsed.ToString("mm\\:ss\\.ff");
+            analyzTime = timer.ElapsedMilliseconds;
 
             TranslateInputData(
                 ref tableData,
@@ -74,14 +96,15 @@ namespace StressTesting
                 );
             } catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
             }
 
             timer.Stop();
-            replaceTime = timer.Elapsed.ToString("mm\\:ss\\.ff");
+            replaceTime = timer.ElapsedMilliseconds;
             //}
-            Console.WriteLine(String.Join('\n', response.Item2));
-            Console.WriteLine($"Analyz time: {analyzTime}\nReplace time: {replaceTime}");
+            //Console.WriteLine(String.Join('\n', response.Item2));
+            //Console.WriteLine($"Analyz time: {analyzTime}\nReplace time: {replaceTime}");
+            return (analyzTime, replaceTime);
         }
 
         static void WriteToFile(int experimentNum, in string[] fileLines)
@@ -170,7 +193,7 @@ namespace StressTesting
         /// </summary>
         /// <param name="dynamicMemAllocationTimes">Количество выделений динамической памяти.</param>
         /// <returns></returns>
-        public string[] createCppCode(int dynamicMemAllocationTimes)
+        public string[] CreateCppCode(int dynamicMemAllocationTimes)
         {
             string[] code = new string[dynamicMemAllocationTimes + 2];
 
@@ -180,16 +203,16 @@ namespace StressTesting
             {
                 idx = _rand.Next(0, dataTypes.Count);
                 dataType = dataTypes[idx];
-                code[i + 1] = templateFunctionBuilder(dataType);
+                code[i + 1] = TemplateFunctionBuilder(dataType);
             }
-            (string, string) mainCode = mainTemplateBuilder();
+            (string, string) mainCode = MainTemplateBuilder();
             code[0] = mainCode.Item1;
             code[^1] = mainCode.Item2;
 
             return code;
         }
 
-        private string templateFunctionBuilder(string dataType)
+        private string TemplateFunctionBuilder(string dataType)
         {
             int sourceCodeSize = _rand.Next(50, 150);
             string hash = GetHashString(5);
@@ -198,35 +221,39 @@ namespace StressTesting
             string allocName = name + "_alloc";
             this._funcsList.Add(funcName);
 
-            return $"void {funcName} () {{\n" +
-                $"  {dataType}* {allocName} = new {dataType}[{sourceCodeSize}];\n" +
-                //$"  {allocName}[0] = {getDefaultValue(dataType)};\n" +
-                $"  for (int i = 0; i < {sourceCodeSize}; ++i) {allocName}[i] = {getDefaultValue(dataType)};\n" +
-                $"  delete[] {allocName};\n" +
-                $"}}\n\n";
+            //return $"void {funcName} () {{\n" +
+            //    $"  {dataType}* {allocName} = new {dataType}[{sourceCodeSize}];\n" +
+            //    //$"  {allocName}[0] = {getDefaultValue(dataType)};\n" +
+            //    $"  for (int i = 0; i < {sourceCodeSize}; ++i) {allocName}[i] = {GetDefaultValue(dataType)};\n" +
+            //    $"  delete[] {allocName};\n" +
+            //    $"}}\n\n";
+            return $"{dataType}* {allocName} = new {dataType}[{sourceCodeSize}];\n" +
+                $"{allocName}[0] = {GetDefaultValue(dataType)};\n" +
+                $"delete[] {allocName};\n";
         }
 
-        (string, string) mainTemplateBuilder()
+        (string, string) MainTemplateBuilder()
         {
-            string headers = "#include <chrono>\n#include <iostream>\n";
+            //string headers = "#include <chrono>\n#include <iostream>\nint main() {";
+            string headers = "int main() {";
 
-            string timeMeasure = $"\nint main() {{" +
-                $"auto start = std::chrono::high_resolution_clock::now();\n" +
-                string.Join("();\n", this._funcsList) +
-                $"();\n" +
-                $"auto end = std::chrono::high_resolution_clock::now();\n" +
-                $"int durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();\n" +
-                $"std::cout << durationTime << std::endl;\n" +
+            string timeMeasure = // $"\nint main() {{" +
+                //$"auto start = std::chrono::high_resolution_clock::now();\n" +
+                //string.Join("();\n", this._funcsList) +
+                //$"();\n" +
+                //$"auto end = std::chrono::high_resolution_clock::now();\n" +
+                //$"int durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();\n" +
+                //$"std::cout << durationTime << std::endl;\n" +
                 $"return 0;" +
                 $"}}";
             return (headers, timeMeasure);
         }
 
-        private dynamic getDefaultValue(string dataType)
+        private dynamic GetDefaultValue(string dataType)
         {
             if (dataType == "string")
             {
-                return $"\"{GetHashString(6)}\"";
+                return $"\"{GetHashString(20)}\"";
             }
             if (dataType == "char")
             {
